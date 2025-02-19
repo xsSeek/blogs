@@ -20,4 +20,4 @@ features:
 这根本不是什么博客，仅仅是一个个人笔记而已。 更新频率要按公司加班多少而定。
 :::
 [comment]: <> (:tada: [博客搭建参考视频]&#40;<https://www.bilibili.com/video/av43316513/&#41>; :tada:)
-<p style="text-align:center;">版权所有 © 2021 — 2036 Dendi | ICP证：<a href="https://icp.chinaz.com/home/info" target="_blank" rel="noopener noreferrer">浙ICP备2023025841号</a></p>
+<p style="text-align:center;">版权所有 © 2025 xSeek. All rights reserved.| ICP证：<a href="https://icp.chinaz.com/home/info" target="_blank" rel="noopener noreferrer">浙ICP备2023025841号</a></p>
