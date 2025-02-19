@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+     .box{
+      padding:4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .box>*{
+      background-color: #fff;
+      position: relative;
+    }
+
+    .box:before{
+      content: '';
+      animation: roll linear 2s infinite ;
+      background: conic-gradient(#58e, #fff);
+      position: absolute;
+      width: 1000px;
+      height: 1000px;
+      left: 50%;
+      top: 50%;
+    }
+
+    @keyframes roll {
+      from{
+        transform: translate(-50%, -50%) rotateZ(0deg) ;
+      }
+      to{
+        transform:translate(-50%, -50%) rotateZ(-360deg) ;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div style="height: 100vw;"></div>
+  </div>
+</body>
+</html>

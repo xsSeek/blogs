@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>拖放API</title>
+    <style>
+      /* 通用样式 */
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+        font-family: "pingfang-sc", Courier, monospace;
+      }
+
+      ul {
+        width: 100%;
+      }
+
+      li {
+        box-sizing: border-box;
+        list-style: none;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        background-color: antiquewhite;
+        border-bottom: 1px solid #999;
+      }
+
+      .left,
+      .right {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+      integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <div class="container" style="display: flex">
+      <div class="left">
+        <ul></ul>
+      </div>
+      <div class="right">
+        <ul></ul>
+      </div>
+    </div>
+    <script>
+      const { debounce, isEqual } = _;
+      let list01 = [
+        {
+          name: "Dendi",
+          age: 16,
+          id: "001",
+        },
+        {
+          name: "Alex",
+          age: "17",
+          id: "002",
+        },
+        {
+          name: "Ellis",
+          age: 18,
+          id: "003",
+        },
+      ];
+
+      const list02 = [
+        {
+          name: "Dendi02",
+          age: 16,
+          id: "004",
+        },
+        {
+          name: "Alex02",
+          age: "17",
+          id: "005",
+        },
+        {
+          name: "Ellis02",
+          age: 18,
+          id: "006",
+        },
+      ];
+      let dragElId = null;
+      const refreshLeft = () => {
+        const fragmentEl = document.createDocumentFragment();
+        list01.map((item) => {
+          const { name, age, id } = item;
+          const liEl = document.createElement("li");
+          liEl.innerText = `姓名: ${name}, 年龄: ${age}`;
+          liEl.dataset.id = id;
+          liEl.draggable = true;
+          let currentEl;
+          liEl.ondragstart = function (e) {
+            // 01. 作为被拖拽元素 start
+            console.log(e, "start");
+            currentEl = e.target;
+            dragElId = e.target.dataset?.["id"];
+            currentEl.style = `border: 1px solid green`;
+          };
+          liEl.ondrag = debounce(
+            function (e) {
+              // 作为被拖拽元素 drag
+              console.log(e, "drag");
+              currentEl.style.cssText = `border-bottom: 1px solid #999`;
+              dragElId = null;
+            },
+            500,
+            {}
+          );
+          // 作为被拖拽元素 drag  // 样式有差别
+          // liEl.ondrag = function (e) {
+          //   currentEl.style.cssText = `border-bottom: 1px solid #999`
+          //   console.log(e, 'drag')
+          // }
+          liEl.ondragEnd = function (e) {
+            console.log(e, "end");
+          };
+          liEl.ondragenter = function (e) {
+            // 作为被拖拽元素 enter
+            console.log(e, "enter");
+          };
+          liEl.ondragleave = function (e) {
+            // 作为被拖拽元素 leave
+            console.log(e, "leave");
+          };
+          liEl.ondragover = function (e) {
+            console.log(e, "over");
+          };
+          liEl.ondrop = function (e) {
+            console.log(e, "drop");
+          };
+          liEl.onExit = function (e) {
+            console.log(e, "e");
+          };
+          return fragmentEl.appendChild(liEl);
+        });
+        document.querySelector(".left ul").replaceChildren(fragmentEl);
+      };
+      refreshLeft();
+      // 以上是左侧元素创建过程
+      const refreshRight = () => {
+        let dragoverEl;
+        const fragmentEl02 = document.createDocumentFragment();
+        list02.map((item) => {
+          const { name, age } = item;
+          const liEl = document.createElement("li");
+          liEl.draggable = true
+          liEl.innerText = `姓名: ${name}, 年龄: ${age}`;
+          return fragmentEl02.appendChild(liEl);
+        });
+        const ulEl = document.querySelector(".right ul");
+
+        ulEl.ondragstart = function (e) {
+          console.log(e, "start ul");
+        };
+        ulEl.ondrag = function (e) {
+          console.log(e, "drag ul");
+        };
+        ulEl.ondragEnd = function (e) {
+          console.log(e, "end ul");
+        };
+        ulEl.ondragenter = function (e) {
+          // 作为目标元素会触发 enter
+          console.log(e, "enter ul");
+        };
+        ulEl.ondragleave = function (e) {
+          // 作为目标元素会触发 leave
+          console.log(e, "leave ul");
+          if (dragoverEl) {
+            dragoverEl.style.cssText = `border-bottom: 1px solid #999`;
+          }
+        };
+        ulEl.ondragover = function (e) {
+          e.preventDefault(); // 不写这行代码 目标元素的ondrop不会触发
+          // 作为目标元素会触发 over
+          console.log(e, "over ul");
+          if (dragoverEl && !isEqual(dragoverEl, e.target)) {
+            dragoverEl.style.cssText = `border: none`;
+          }
+          dragoverEl = e.target;
+          dragoverEl.style.cssText = `border: 2px solid red`;
+        };
+        ulEl.ondrop = function (e) {
+          e.preventDefault();
+          console.log(e, "drop ul");
+          // 知道拖拽的元素 和 目標元素 目標元素就是e.target
+          console.log(dragElId, 'id');
+          const idx = list01.findIndex((item) => item.id === dragElId)
+          const dataRemove = list01.splice(idx, 1)
+          refreshLeft()
+          list02.push(...dataRemove)
+          refreshRight()
+        };
+        ulEl.onExit = function (e) {
+          console.log(e, "exit ul");
+        };
+        ulEl.replaceChildren(fragmentEl02);
+      };
+      refreshRight();
+    </script>
+  </body>
+</html>

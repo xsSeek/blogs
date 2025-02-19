@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>IndexDB Demo</title>
+  <script src="indexDB.js"></script>
+<!--  教程地址： https://zhuanlan.zhihu.com/p/429086021 -->
+</head>
+<body>
+<script>
+  let instDB
+  openDB('class').then(database => {
+    instDB = database
+    console.log(instDB, '数据库对象')
+    // 主键和索引不能为空
+    let data = {
+      uuid: new Date().getTime().toString(),
+      name: '张三',
+      // age: Math.round(Math.random() * 30),
+      age: 18,
+      score: Math.round(Math.random() * 100)
+    }
+    addData(instDB, 'users', data)
+    getOneByPrimaryKey(instDB,'users', 	'1651388924851')
+    cursorGetData(instDB, 'users')
+    cursorGetDataByIndexAndPage(instDB, 'users', 'age', 18, 6, 10)
+    clearData(instDB, 'users')
+  })
+</script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>上传头像裁切</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .container-bg {
+      width: 180px;
+      height: 180px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
+      border-radius: 3px;
+      box-sizing: content-box;
+
+      .image-container {
+        position: relative;
+
+        .image {
+          object-fit: contain;
+          -webkit-user-drag: none;
+          vertical-align: bottom;
+        }
+
+        .shadow-box {
+          display: none;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 1;
+          cursor: crosshair;
+        }
+
+        .shadow-img-box {
+          position: absolute;
+          user-select: none;
+          z-index: 1;
+        }
+
+        .crop-wrap {
+          .drag-box {
+            position: absolute;
+            z-index: 2;
+            border: 1px solid white;
+            display: none;
+            cursor: move;
+            box-sizing: border-box;
+
+            .drag-point {
+              position: absolute;
+              width: 10px;
+              height: 10px;
+              border: 1px solid white;
+              box-sizing: border-box;
+            }
+
+            .point-lt {
+              top: -10px;
+              left: -10px;
+              cursor: nw-resize;
+            }
+
+            .point-lb {
+              bottom: -10px;
+              left: -10px;
+              cursor: sw-resize;
+            }
+
+            .point-rt {
+              top: -10px;
+              right: -10px;
+              cursor: ne-resize;
+            }
+
+            .point-rb {
+              bottom: -10px;
+              right: -10px;
+              cursor: se-resize;
+            }
+          }
+        }
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <input class="upload" type="file" accept="image/png,image/jpg,image/jpeg" style="display: none" />
+  <button class="fileSelect" type="button">选择一些文件</button>
+  <button onclick="handleDownload()" type="button">下载裁剪图片</button>
+  <button onclick="handleUpload()" type="button">上传到服务端</button>
+  <main style="
+        width: 500px;
+        height: 300px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      ">
+    <div class="container-bg">
+      <div class="image-container">
+        <!--图片上层不透明的部分-->
+        <div class="shadow-box"></div>
+        <!--白色框和4个角的小方格-->
+        <div class="crop-wrap">
+          <div class="shadow-img-box">
+            <img src="" alt="" class="shadow-img" />
+          </div>
+          <div class="drag-box show">
+            <span class="drag-point point-lt"></span>
+            <span class="drag-point point-lb"></span>
+            <span class="drag-point point-rt"></span>
+            <span class="drag-point point-rb"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="preview"></div>
+
+  <script>
+    // download
+    const handleDownload = () => {
+      const elA = document.createElement("a");
+      elA.download = "cut";
+      elA.href = cutImage;
+      elA.click();
+    };
+
+    // 裁切部分上传到服务端
+    const handleUpload = () => {
+      fetch(cutImage)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "upload", { type: "image/jpeg" });
+          const formData = new FormData();
+          formData.append("files", elInput.files[0]);
+          console.log(formData, "传给服务端数据");
+          console.log(formData.getAll("files"));
+        });
+    };
+    const throttle = function (fun, delay) {
+      let timer;
+      if (timer) return true;
+      return function () {
+        timer = setTimeout(function () {
+          fun.apply(this, arguments);
+        }, delay);
+        timer = null;
+      };
+    };
+    // 实现选择图片的html结构
+    const elInput = document.querySelector(".upload");
+    const elBtn = document.querySelector(".fileSelect");
+
+    const elImageContainer = document.querySelector(".image-container");
+    // 遮盖层el
+    const elMask = document.querySelector(".shadow-box");
+    const elShadowBox = document.querySelector(".crop-wrap .shadow-img-box");
+    const elShadowImage = document.querySelector(".crop-wrap .shadow-img");
+    // 可拖拽el
+    const elDragBox = document.querySelector(".drag-box");
+    const elRb = document.querySelector(".point-rb");
+    // container-bg 的最大高和宽
+    const maxHeight = 180;
+    const maxWidth = 180;
+    // 图片在页面上的尺寸 和 elMask size same
+    let imgWidth, imgHeight;
+    let bool = false;
+    let isCanResize = false;
+    // 图片原始大小 为计算绘制区域准备
+    let originWidth, originHeight;
+    let ratio; // 图片放大倍數
+    let cutImage;
+    // 开始位置坐标
+    let startX, startY;
+    // 创建一个图片
+    const elImage = document.createElement("img");
+    elImage.setAttribute("class", "image");
+
+    elDragBox.addEventListener("mousedown", function (e) {
+      if (e.target === elDragBox) bool = true;
+    });
+
+    elDragBox.addEventListener("mouseLeve", function () {
+      bool = false;
+    });
+    elDragBox.addEventListener("mouseup", function () {
+      bool = false;
+    });
+    const updateRect = function (e) {
+
+      const move = () => {
+        if (bool) {
+          const x =
+            e.clientX -
+            elImageContainer.offsetLeft -
+            elDragBox.style.width.slice(0, -2) / 2;
+          const y =
+            e.clientY -
+            elImageContainer.offsetTop -
+            elDragBox.style.height.slice(0, -2) / 2;
+
+          elDragBox.style.left = x + "px";
+          elShadowBox.style.left = x + "px";
+          elDragBox.style.top = y + "px";
+          elShadowBox.style.top = y + "px";
+
+          if (x < 0) {
+            elDragBox.style.left = 0 + "px";
+            elShadowBox.style.left = 0 + "px";
+          } else if (x > imgWidth - elDragBox.style.width.slice(0, -2)) {
+            elDragBox.style.left = imgWidth - elDragBox.style.width.slice(0, -2) + "px";
+            elShadowBox.style.left =
+              imgWidth - elDragBox.style.width.slice(0, -2) + "px";
+          }
+
+          if (y < 0) {
+            elDragBox.style.top = 0 + "px";
+            elShadowBox.style.top = 0 + "px";
+          } else if (y > imgHeight - elDragBox.style.height.slice(0, -2)) {
+            elDragBox.style.top =
+              imgHeight - elDragBox.style.height.slice(0, -2) + "px";
+            elShadowBox.style.top =
+              imgHeight - elDragBox.style.height.slice(0, -2) + "px";
+          }
+          // 窃取区域
+          handleDraw();
+        }
+      };
+      throttle(move, 16.66)(e);
+    };
+    elRb.onmousedown = (e) => {
+      startX = e.clientX;
+      startY = e.clientY;
+      isCanResize = true;
+    };
+    window.onmouseup = () => {
+      isCanResize = false;
+    };
+
+    window.onmousemove = function (e) {
+      const resize = () => {
+        const w = elDragBox.style.width.slice(0, -2) * 1
+        const h = elDragBox.style.width.slice(0, -2) * 1
+        elDragBox.style.width =
+          w +
+          Math.max(e.clientX - startX, e.clientY - startY) +
+          "px";
+        elDragBox.style.height =
+          h +
+          Math.max(e.clientX - startX, e.clientY - startY) +
+          "px";
+        //
+        elShadowBox.style.width = w + 'px';
+        elShadowBox.style.height = h + 'px';
+        elShadowImage.style.width = w + 'px';
+        elShadowImage.style.height = h + 'px';
+
+        // 点位计算不正确 [l, t, w, h] 拖拽box的位置信息需要调整
+        if (elDragBox.style.width.slice(0, -2) * 1 >= imgWidth) {
+          elDragBox.style.width =
+            Math.min(imgWidth, imgHeight) +
+            "px";
+          elDragBox.style.height =
+            Math.min(imgWidth, imgHeight) +
+            "px";
+          //
+          elShadowBox.style.width = Math.min(imgWidth, imgHeight) + 'px';
+          elShadowBox.style.height = Math.min(imgWidth, imgHeight) + 'px';
+          elShadowImage.style.width = Math.min(imgWidth, imgHeight) + 'px';
+          elShadowImage.style.height = Math.min(imgWidth, imgHeight) + 'px';
+        }
+        startX = e.clientX
+        startY = e.clientY
+        handleDraw()
+      }
+      if (isCanResize) {
+        throttle(resize, 16.66)()
+      }
+    };
+    const handleDraw = () => {
+      // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+      // 截取照片
+      const sx = elDragBox.style.left.slice(0, -2) * ratio;
+      const sy = elDragBox.style.top.slice(0, -2) * ratio;
+      const sWidth = elDragBox.clientWidth * ratio;
+      const sHeight = elDragBox.clientHeight * ratio;
+      const elCanvas = document.createElement("canvas");
+      elCanvas.setAttribute("width", "250");
+      elCanvas.setAttribute("height", "250");
+      const ctx = elCanvas.getContext("2d");
+      ctx.drawImage(elImage, sx, sy, sWidth, sHeight, 0, 0, 250, 250);
+      document.querySelector(".preview").innerHTML = "";
+      document.querySelector(".preview").appendChild(elCanvas);
+      cutImage = elCanvas.toDataURL("image/jpeg", 1);
+      elShadowImage.src = cutImage;
+    };
+
+    // TODO 高频事件 做节流处理
+    elDragBox.addEventListener("mousemove", updateRect, { passive: false });
+
+    elDragBox.addEventListener(
+      "mouseup",
+      function () {
+        bool = false;
+      },
+      false
+    );
+
+    // 选择图片
+    const handleChange = (e) => {
+      let file = e.target.files[0];
+      if (!file) {
+        return false;
+      }
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+      fileReader.onload = function (e) {
+        const exitImg = document.querySelector(".image-container .image");
+        if (exitImg) {
+          // 先删除
+          elImageContainer.removeChild(exitImg);
+        }
+        elImage.setAttribute("src", e.target.result);
+        // 获取图片大小
+        elImage.onload = function () {
+          originWidth = this.width;
+          originHeight = this.height;
+          // 图片的宽度为1344,长度为1816
+          if (this.width > this.height) {
+            // 180图片缩放后宽度
+            imgWidth = maxWidth;
+            imgHeight = (this.height / this.width) * maxWidth;
+            handleSetElStyl(maxWidth, imgHeight, elImage);
+          } else if (this.width < this.height) {
+            imgHeight = maxHeight;
+            imgWidth = (this.width / this.height) * maxHeight;
+            handleSetElStyl(imgWidth, maxHeight, elImage);
+          } else {
+            // 哔哩哔哩 这种情况不裁切
+            elImage.style.cssText = `width: ${maxHeight}px; height: ${maxHeight}px`;
+          }
+          elImageContainer.appendChild(elImage);
+          // 测试代码
+          handleDraw();
+        };
+      };
+    };
+    // 样式设置
+    const handleSetElStyl = (w, h, elImage) => {
+      elImage.style.cssText = `width: ${w}px; height: ${h}px`;
+      const minSize = Math.min(w, h);
+      const arrtName = w > h ? "left" : "top";
+      elMask.style.cssText = `width: ${w}px; height: ${h}px;`;
+      // TEST MOVE
+      const selAreaStyl = `width: ${minSize / 2}px; height: ${minSize / 2
+        }px; ${arrtName}: ${Math.abs(w - h) / 2}px;  display: block`;
+      elDragBox.style.cssText = selAreaStyl;
+      elMask.style.display = "block";
+      elShadowBox.style = selAreaStyl;
+      elShadowImage.style = selAreaStyl;
+      ratio = originWidth / imgWidth;
+    };
+
+    elBtn.addEventListener(
+      "click",
+      () => {
+        if (elInput) {
+          elInput.click();
+          elInput.addEventListener("change", handleChange, false);
+        }
+      },
+      false
+    );
+  </script>
+</body>
+
+</html>

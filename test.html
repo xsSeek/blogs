@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bind</title>
+</head>
+
+<body>
+  <script>
+    Function.prototype.myBind = function (ctx) {
+      // 调用 bind 的不是函数，需要抛出异常
+      if (typeof this !== "function") {
+        throw new Error("ctx must be function")
+      }
+
+      const argv1 = Array.prototype.slice.call(arguments, 1)
+      const self = this
+      return function _bind() {
+        const argv2 = Array.prototype.slice.call(arguments)
+        const argv = argv1.concat(argv2)
+
+        if (Object.getPrototypeOf(this) === _bind.prototype) {
+          // return new self(...argv)
+          var obj = ctx
+          Object.setPrototypeOf(obj, self.prototype)
+          self.apply(obj, argv)
+          return obj
+        } else {
+          return self.apply(ctx, argv)
+        }
+      }
+    }
+
+    // 测试1
+    function test(a, b, c, d) {
+      console.log(a, b, c, d, 'test')
+      return 'x'
+    }
+
+    const module = {
+      x: 42,
+      getX: function () {
+        return this.x
+      },
+    }
+
+    const bindTestFn = test.myBind(module, 1, 2)
+    bindTestFn(3, 4)
+
+    // 测试2
+    let value = 2
+    let foo = {
+      value: 1
+    }
+
+    function bar(name, age) {
+      this.habit = 'shopping'
+      console.log(this.value)
+      console.log(name)
+      console.log(age)
+    }
+
+    bar.prototype.friend = 'kevin'
+
+    const bindFoo = bar.myBind(foo, 'Jack')
+    let obj = new bindFoo(20)
+    console.log(obj, obj.habit, obj.friend)
+
+    // 快速排序
+    const arr = [2, 22, 32, 44, 66, 88, 1, 10, 3, 8, 6]
+    function quickSort(arr, startIndex = 0) {
+      if (arr.length <= 1) {
+        return arr
+      }
+      const leftArr = [], rightArr = [], startNum = arr.splice(startIndex, 1)[0]
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] < startNum) {
+          leftArr.push(arr[i])
+        } else {
+          rightArr.push(arr[i])
+        }
+      }
+      return [...quickSort(leftArr), startNum, ...quickSort(rightArr)]
+    }
+    quickSort(arr, 4)
+
+  </script>
+</body>
+
+</html>

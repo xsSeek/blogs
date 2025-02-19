@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    .box {
+      display: inline-block;
+      padding: 10px;
+      position: relative;
+    }
+    .box::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; right: 0; bottom: 0;
+      border: 2px solid #cd0000;
+      animation: borderAround 1.5s infinite linear;
+    }
+    @keyframes borderAround {
+      0%, 100% { clip: rect(0 148px 2px 0); }
+      25% { clip: rect(0 148px 116px 146px); }
+      50% { clip: rect(114px 148px 116px 0); }
+      75% { clip: rect(0 2px 116px 0); }
+    }
+  </style>
+</head>
+<body>
+<div class="box">
+  <img src="https://cloud.google.com/vision/docs/detecting-properties?authuser=0&hl=zh-cn" width="128" height="96" alt="">
+</div>
+</body>
+</html>
