@@ -67,8 +67,8 @@ module.exports = [
 				link: '/12.vscode',
 			},
 			{
-				text: '工程配置相关',
-				link: '/14.createReact',
+				text: '油猴插件',
+				link: '/14.tamperMonkey',
 			},
 			{
 				text: 'vue3 项目工程配置',
