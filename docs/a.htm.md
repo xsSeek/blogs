@@ -405,4 +405,255 @@ data:[mediatype][;base63], data
 - 4.为元素提前设置好高宽，不因多次渲染改变位置
 :::
 
-#### 如何计算白屏时间和首屏时间
+### 如何计算白屏时间和首屏时间
+
+计算白屏时间和首屏时间是前端性能优化的重要步骤，以下是具体方法：
+
+#### 1. 白屏时间
+白屏时间指从输入URL到页面开始显示内容的时间。
+
+##### 计算方法：
+- **Performance API**：
+  ```javascript
+  const whiteScreenTime = performance.timing.responseStart - performance.timing.navigationStart;
+  console.log(`白屏时间：${whiteScreenTime}ms`);
+  ```
+
+- **手动打点**：
+  在HTML头部插入JavaScript代码记录开始时间，在页面内容开始渲染时记录结束时间。
+  ```html
+  <head>
+    <script>
+      window.startTime = Date.now();
+    </script>
+  </head>
+  <body>
+    <div>页面内容</div>
+    <script>
+      const whiteScreenTime = Date.now() - window.startTime;
+      console.log(`白屏时间：${whiteScreenTime}ms`);
+    </script>
+  </body>
+  ```
+
+#### 2. 首屏时间
+首屏时间指从输入URL到首屏内容完全渲染的时间。
+
+#### 计算方法：
+- **Performance API**：
+  ```javascript
+  const firstScreenTime = performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart;
+  console.log(`首屏时间：${firstScreenTime}ms`);
+  ```
+
+- **手动打点**：
+  在首屏内容底部插入JavaScript代码记录结束时间。
+  ```html
+  <head>
+    <script>
+      window.startTime = Date.now();
+    </script>
+  </head>
+  <body>
+    <div>首屏内容</div>
+    <script>
+      const firstScreenTime = Date.now() - window.startTime;
+      console.log(`首屏时间：${firstScreenTime}ms`);
+    </script>
+  </body>
+  ```
+
+- **MutationObserver**：
+  使用`MutationObserver`监听DOM变化，判断首屏内容是否渲染完成。
+  ```javascript
+  const startTime = Date.now();
+  const observer = new MutationObserver(() => {
+    if (document.querySelector('.first-screen-element')) {
+      const firstScreenTime = Date.now() - startTime;
+      console.log(`首屏时间：${firstScreenTime}ms`);
+      observer.disconnect();
+    }
+  });
+  observer.observe(document, { childList: true, subtree: true });
+  ```
+
+#### 总结
+- **白屏时间**：`responseStart - navigationStart`
+- **首屏时间**：`domContentLoadedEventEnd - navigationStart` 或通过手动打点和`MutationObserver`计算
+
+### 简单介绍 requestIdleCallback 及使用场景
+
+> requestIdleCallback 是一个浏览器 API，用于在浏览器的空闲时间执行 JavaScript 代码。它允许开发者在主线程不忙时执行任务，以避免阻塞用户交互或导致页面卡顿。
+
+`requestIdleCallback` 是浏览器提供的一个 API，用于在浏览器空闲时执行任务，避免影响关键任务的执行，如动画或用户输入响应。
+
+#### 功能
+- **空闲时执行**：当主线程空闲时，执行回调函数。
+- **超时机制**：可设置超时时间，确保任务在指定时间内执行。
+
+### 使用场景
+1. **低优先级任务**：如日志记录、数据预取等。
+2. **复杂计算**：如大数据处理、图像处理等。
+3. **延迟加载**：如懒加载非关键资源。
+
+#### 示例代码
+```javascript
+function doBackgroundWork(deadline) {
+  while (deadline.timeRemaining() > 0) {
+    // 执行任务
+  }
+  if (还有任务) {
+    requestIdleCallback(doBackgroundWork);
+  }
+}
+
+requestIdleCallback(doBackgroundWork);
+```
+
+#### 注意事项
+- **任务拆分**：将大任务拆分为小块，避免长时间占用主线程。
+- **超时设置**：合理设置超时时间，防止任务延迟过长。
+
+#### 总结
+`requestIdleCallback` 适合在浏览器空闲时执行低优先级任务，提升页面性能。
+
+### 如何把 json 数据转化为 demo.json 并下载文件
+
+json 视为字符串，可以利用 DataURL 进行下载
+
+Text -> DataURL
+
+除了使用 DataURL，还可以转化为 Object URL 进行下载
+
+Text -> Blob -> Object URL
+
+可以把以下代码直接粘贴到控制台下载文件
+
+```js
+function download(url, name) {
+  const a = document.createElement("a");
+  a.download = name;
+  a.rel = "noopener";
+  a.href = url;
+  // 触发模拟点击
+  a.dispatchEvent(new MouseEvent("click"));
+  // 或者 a.click()
+}
+ 
+const json = {
+  a: 3,
+  b: 4,
+  c: 5,
+};
+const str = JSON.stringify(json, null, 2);
+ 
+// 方案一：Text -> DataURL
+const dataUrl = `data:,${str}`;
+download(dataUrl, "demo.json");
+ 
+// 方案二：Text -> Blob -> ObjectURL
+const url = URL.createObjectURL(new Blob(str.split("")));
+download(url, "demo1.json");
+```
+
+
+### 在浏览器中如何获取剪切板中内容
+
+在浏览器中获取剪切板内容可以通过 `Clipboard API` 实现。以下是具体方法：
+
+---
+
+#### 1. **使用 `navigator.clipboard.readText()`**
+这是最常用的方法，用于读取剪切板中的文本内容。
+
+#### 示例代码：
+```javascript
+navigator.clipboard.readText()
+  .then(text => {
+    console.log('剪切板内容:', text);
+  })
+  .catch(err => {
+    console.error('无法读取剪切板内容:', err);
+  });
+```
+
+#### 注意事项：
+- **用户权限**：浏览器会要求用户授权，只有在用户允许后才能访问剪切板。
+- **HTTPS 环境**：`Clipboard API` 仅在 HTTPS 或 `localhost` 环境下可用。
+- **浏览器支持**：现代浏览器支持（Chrome、Edge、Firefox 等），但 Safari 支持有限。
+
+---
+
+#### 2. **使用 `document.execCommand('paste')`（已废弃）**
+这是旧版方法，虽然部分浏览器仍支持，但已被废弃，不推荐使用。
+
+#### 示例代码：
+```javascript
+const input = document.createElement('input');
+document.body.appendChild(input);
+input.focus();
+document.execCommand('paste');
+const clipboardText = input.value;
+document.body.removeChild(input);
+console.log('剪切板内容:', clipboardText);
+```
+
+#### 注意事项：
+- **兼容性**：部分浏览器可能不支持。
+- **安全性**：已被废弃，可能存在安全隐患。
+
+---
+
+#### 3. **处理图片或富文本内容**
+如果需要读取剪切板中的图片或富文本内容，可以使用 `navigator.clipboard.read()`。
+
+#### 示例代码：
+```javascript
+navigator.clipboard.read()
+  .then(data => {
+    for (const item of data) {
+      if (item.types.includes('text/plain')) {
+        item.getType('text/plain').then(blob => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            console.log('文本内容:', reader.result);
+          };
+          reader.readAsText(blob);
+        });
+      } else if (item.types.includes('image/png')) {
+        item.getType('image/png').then(blob => {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(blob);
+          document.body.appendChild(img);
+        });
+      }
+    }
+  })
+  .catch(err => {
+    console.error('无法读取剪切板内容:', err);
+  });
+```
+
+---
+
+#### 4. **用户交互要求**
+浏览器要求剪切板操作必须由用户触发（如点击事件），否则会抛出错误。
+
+#### 示例代码：
+```javascript
+button.addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    console.log('剪切板内容:', text);
+  } catch (err) {
+    console.error('无法读取剪切板内容:', err);
+  }
+});
+```
+
+---
+
+#### 总结
+- 推荐使用 `navigator.clipboard.readText()` 获取剪切板文本内容。
+- 对于图片或富文本内容，使用 `navigator.clipboard.read()`。
+- 确保操作由用户触发，并在 HTTPS 环境下使用。

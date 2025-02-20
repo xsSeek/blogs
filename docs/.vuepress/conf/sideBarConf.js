@@ -2,7 +2,7 @@ module.exports = {
   '/': [
     ['2.js', 'ECMAScript'],
     ['6.css', 'CSS3'],
-    ['a.htm', 'html'],
+    ['a.htm', 'html5'],
     ['3.0.vue', 'VUE'],
     ['4.react', 'REACT'],
     ['5.webpack', 'WEBPACK'],
