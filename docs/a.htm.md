@@ -1,4 +1,4 @@
-## html 汇总
+## html 知识剖析
 
 ### 网站开发中，如何实现图片的懒加载
 
@@ -289,3 +289,120 @@ axios.post(
 // cancel the request (the message parameter is optional)
 source.cancel("Operation canceled by the user.");
 ```
+
+#### 在 Canvas 中如何处理跨域的图片
+
+```js 
+img.setAttribute("crossOrigin", "anonymous");
+```
+
+#### textarea 如何禁止拉伸
+
+```css
+textarea {
+  resize: none;
+}
+```
+
+
+### 什么是 HTML 的实体编码 (HTML Entity Encode)
+
+:::tip
+- 不可分的空格:＆nbsp;
+- <(小于符号):＆lt;
+- (大于符号):＆gt;
+- ＆(与符号):＆amp;
+- ″(双引号):＆quot;
+- ‘(单引号):‘＆apos;
+- ...
+:::
+
+HTML 实体是一段以连字号（&）开头、以分号（;）结尾的字符串。用以显示不可见字符及保留字符 (如 HTML 标签)
+
+在前端，一般为了避免 XSS 攻击，会将 <> 编码为 &lt; 与 &gt;，这些就是 HTML 实体编码。
+
+在 [whatwg]('https://html.spec.whatwg.org/multipage/named-characters.html#named-character-references) 中可查看实体编码数据。
+
+在 HTML 转义时，仅仅只需要对六个字符进行编码: &, <, >, ", ', ```。可使用 [he]("https://npm.devtool.tech/he") 这个库进行编码及转义
+
+
+```js
+// 实体编码
+he.encode('<img src=""></img>')
+"&#x3C;img src=&#x22;&#x22;&#x3E;&#x3C;/img&#x3E;"
+ 
+// 转义
+he.escape('<img src=""></img>')
+"&lt;img src=&quot;&quot;&gt;&lt;/img&gt;"
+```
+
+
+### 什么是 Data URL
+
+#### Data URL是将图片转换为base64直接嵌入到了网页中，使用`<img src="data:[MIME type];base64"/>`这种方式引用图片，不需要再发请求获取图片。 使用Data URL也有一些缺点：
+
+:::tip
+- base64编码后的图片会比原来的体积大三分之一左右。
+- Data URL形式的图片不会缓存下来，每次访问页面都要被下载一次。可以将Data URL写入到CSS文件中随着CSS被缓存下来。
+:::
+
+
+#### Data URL是前缀为data:协议的URL； 它允许内容创建者向文档中嵌入小文件，比如图片等。 Data URL由四部分组成：
+
+:::tip
+- 前缀data:
+- 指示数据类型的MIME类型。例如image/jpeg表示JPEG图像文件；如果此部分被省略，则默认值为text/plain;charset=US-SACII
+- 如果为非文本数据，则可选base64做标记
+- 数据
+:::
+
+```html
+data:[mediatype][;base63], data
+```  
+
+### HTML 中的 input 标签有哪些 type
+
+:::warning
+- button
+- checkbox
+- color
+- date
+- datetime-local
+- email
+- file
+- hidden
+- image
+- month
+- number
+- password
+- radio
+- range
+- reset
+- search
+- submit
+- tel
+- text
+- time
+- url
+- week
+:::
+
+### 什么是重排重绘，如何减少重拍重绘
+
+> 重排和重绘是关键渲染路径中的两步，可以参考另一个问题: [什么是关键渲染路径]("https://q.shanyue.tech/fe/engineering/391")
+
+ - 重排(Reflow)：元素的位置发生变动时发生重排，也叫回流。此时在关键渲染路径中的 Layout 阶段，计算每一个元素在设备视口内的确切位置和大小。当一个元素位置发生变化时，其父元素及其后边的元素位置都可能发生变化，代价极高
+
+
+ - 重绘(Repaint): 元素的样式发生变动，但是位置没有改变。此时在关键渲染路径中的 Paint 阶段，将渲染树中的每个节点转换成屏幕上的实际像素，这一步通常称为绘制或栅格化
+
+> 另外，重排必定会造成重绘。以下是避免过多重拍重绘的方法
+
+:::tip
+- 1.使用 DocumentFragment 进行 DOM 操作，不过现在原生操作很少也基本上用不到
+- 2.CSS 样式尽量批量修改
+- 3.避免使用 table 布局
+- 4.为元素提前设置好高宽，不因多次渲染改变位置
+:::
+
+#### 如何计算白屏时间和首屏时间
