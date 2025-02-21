@@ -38,7 +38,7 @@ module.exports = [
             {text: '数组方法汇总', link: '2.1.array'},
             {text: '字符串方法汇总', link: '2.3.string'},
             {text: '正则表达式', link: '2.4.regExp'},
-            {text: '浏览器', link: '2.5.browser'},
+            {text: '浏览器', link: '8.browser'},
             {text: '油侯插件', link: '14.tamperMonkey'},
             {text: '懒加载和预加载', link: '1.track'},
         ],
