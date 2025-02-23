@@ -6,6 +6,7 @@ module.exports = {
         ['9.http', 'HTTP协议'],
         ['2.js', 'ECMAScript'],
         ['2.1.array', '数组'],
+        ['2.2.this', 'this'],
         ['3.0.vue', 'VUE'],
         ['4.react', 'REACT'],
         ['5.webpack', 'WEBPACK'],
