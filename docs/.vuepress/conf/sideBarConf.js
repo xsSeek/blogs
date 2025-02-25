@@ -8,6 +8,7 @@ module.exports = {
         ['2.1.array', '数组'],
         ['2.2.this', 'this'],
         ['3.0.vue', 'VUE'],
+        ['b.vue-router', 'vueRouter'],
         ['4.react', 'REACT'],
         ['5.webpack', 'WEBPACK'],
         ['7.arithmetic', '数据结构和算法'],
