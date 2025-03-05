@@ -112,7 +112,7 @@ module.exports = [
             },
             {
                 text: 'Array',
-                link: '/7.1_Array',
+                link: '/2.1_Array',
             },
             {
                 text: 'Stack',
